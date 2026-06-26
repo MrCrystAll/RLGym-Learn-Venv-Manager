@@ -47,3 +47,6 @@ class VirtualEnvironment:
         shutil.rmtree(
             os.path.join(self.config.python_executable, "..", "..")
         )  # Delete the whole tree ".venv/<dir>/<dir>"
+
+    def uninstall(self, package: str):
+        return self.pip.uninstall(package)
