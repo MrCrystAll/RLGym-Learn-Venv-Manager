@@ -3,6 +3,9 @@ import os
 from tempfile import NamedTemporaryFile
 
 from rlgym_learn_venv_manager.core.process import is_interpreter_valid, run_subprocess
+from rlgym_learn_venv_manager.core.return_data import PackageInfo
+
+INDIVIDUAL_SHOW_PACKAGE_OUTPUT_LEN = 11
 
 
 class PIPInterface:
@@ -32,6 +35,9 @@ class PIPInterface:
 
     def _list(self, *args):
         return self._run_pip("list", *args)
+
+    def _show(self, *args):
+        return self._run_pip("show", *args)
 
     def _generate_temp_requirements(self):
         req = NamedTemporaryFile("r+", suffix=".txt", delete=False)
@@ -95,3 +101,25 @@ class PIPInterface:
         os.remove(f.name)
 
         return _data
+
+    def get_info(self, *packages: str) -> dict[str, PackageInfo]:
+        _logs = self._show(*packages)
+
+        _results = {}
+
+        for i in range(len(packages)):
+            _name_l, _version_l, _summary_l = _logs[
+                i * INDIVIDUAL_SHOW_PACKAGE_OUTPUT_LEN : i
+                * INDIVIDUAL_SHOW_PACKAGE_OUTPUT_LEN
+                + 3
+            ]
+            print(_name_l)
+            _name = _name_l.split(" ")[1]
+            _version = _version_l.split(" ")[1]
+            _summary = " ".join(_summary_l.split(" ")[1:])
+
+            _results[_name] = PackageInfo(
+                name=_name, version=_version, summary=_summary
+            )
+
+        return _results

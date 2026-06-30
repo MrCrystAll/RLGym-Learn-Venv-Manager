@@ -41,7 +41,9 @@ class VirtualEnvironment:
         return _results
 
     def get_all_packages(self):
-        return self.pip.list()
+        _packages = self.pip.list()
+        _data = self.pip.get_info(*_packages.keys())
+        return _data
 
     def delete(self):
         shutil.rmtree(
