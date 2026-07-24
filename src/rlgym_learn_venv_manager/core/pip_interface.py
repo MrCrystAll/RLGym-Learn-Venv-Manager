@@ -113,7 +113,6 @@ class PIPInterface:
                 * INDIVIDUAL_SHOW_PACKAGE_OUTPUT_LEN
                 + 3
             ]
-            print(_name_l)
             _name = _name_l.split(" ")[1]
             _version = _version_l.split(" ")[1]
             _summary = " ".join(_summary_l.split(" ")[1:])
