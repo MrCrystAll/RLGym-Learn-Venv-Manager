@@ -39,6 +39,9 @@ class PIPInterface:
     def _show(self, *args):
         return self._run_pip("show", *args)
 
+    def _inspect(self):
+        return self._run_pip("inspect")
+
     def _generate_temp_requirements(self):
         req = NamedTemporaryFile("r+", suffix=".txt", delete=False)
         _packages = self.list()
@@ -103,22 +106,23 @@ class PIPInterface:
         return _data
 
     def get_info(self, *packages: str) -> dict[str, PackageInfo]:
-        _logs = self._show(*packages)
+        _logs = self._inspect()
+        _all_packages = json.loads("\n".join(_logs))["installed"]
 
         _results = {}
+        _data = {}
 
-        for i in range(len(packages)):
-            _name_l, _version_l, _summary_l = _logs[
-                i * INDIVIDUAL_SHOW_PACKAGE_OUTPUT_LEN : i
-                * INDIVIDUAL_SHOW_PACKAGE_OUTPUT_LEN
-                + 3
-            ]
-            _name = _name_l.split(" ")[1]
-            _version = _version_l.split(" ")[1]
-            _summary = " ".join(_summary_l.split(" ")[1:])
+        for _p in _all_packages:
+            _name = _p["metadata"]["name"]
+            _version = _p["metadata"].get("version", "0.0.0")
+            _summary = _p["metadata"].get("summary", "No summary available")
+            _data[_name] = {
+                "name": _name,
+                "version": _version,
+                "summary": _summary
+            }
 
-            _results[_name] = PackageInfo(
-                name=_name, version=_version, summary=_summary
-            )
+        for package in packages:
+            _results[package] = PackageInfo.model_validate(_data[package])
 
         return _results
