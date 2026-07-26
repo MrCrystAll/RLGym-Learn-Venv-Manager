@@ -70,7 +70,15 @@ class PIPInterface:
         if requirements is not None:
             _args.extend(("-r", requirements))
 
-        return self._install(*_args)
+        req = self._generate_temp_requirements()
+        _args.extend(("-r", req.name))
+
+        _result = self._install(*_args)
+
+        req.close()
+        os.remove(req.name)
+
+        return _result
 
     def uninstall(self, *packages: str):
         return self._uninstall(*packages)
@@ -82,7 +90,17 @@ class PIPInterface:
         return {_p["name"]: _p["version"] for _p in _packages}
 
     def update(self, *args):
-        return self._update(*args)
+        _args = [*args]
+
+        req = self._generate_temp_requirements()
+        _args.extend(("-r", req.name))
+
+        _result = self._update(*_args)
+
+        req.close()
+        os.remove(req.name)
+
+        return _result
 
     def self_update(self):
         return self.update("pip")
@@ -92,7 +110,7 @@ class PIPInterface:
 
         req = self._generate_temp_requirements()
 
-        with NamedTemporaryFile("w+", suffix=".json", delete=False) as f:
+        with NamedTemporaryFile("w+", suffix=".json", delete=False, encoding="utf-8") as f:
             self._install("--dry-run", "-r", req.name, "--report", f.name, "-U")
             f.seek(0)
             _data = json.load(f)
